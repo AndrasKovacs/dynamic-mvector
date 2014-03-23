@@ -28,7 +28,8 @@ module Data.Vector.Mutable.Dynamic(
     , unsafePopBack
     , popBack
     , unsafeReadBack
-    , readBack ) where
+    , readBack
+    , extend ) where
 
 
 import Prelude hiding (read, length, replicate)
@@ -55,11 +56,15 @@ newReserve = 5
 
 
 unsafeFreeze :: PrimMonad m => DynVector (PrimState m) a -> m (V.Vector a)
-unsafeFreeze (DynVector v) = V.unsafeFreeze . _data =<< readMutVar v 
+unsafeFreeze (DynVector v) = do
+    DynVectorData s v <- readMutVar v
+    V.unsafeFreeze (MV.unsafeSlice 0 s v)
 {-# INLINE unsafeFreeze #-}
 
 freeze :: PrimMonad m => DynVector (PrimState m) a -> m (V.Vector a)
-freeze (DynVector v) = V.freeze . _data =<< readMutVar v
+freeze (DynVector v) = do
+    DynVectorData s v <- readMutVar v
+    V.freeze (MV.unsafeSlice 0 s v)
 {-# INLINE freeze #-}
 
 unsafeThaw :: PrimMonad m => V.Vector a -> m (DynVector (PrimState m) a)
@@ -259,3 +264,16 @@ unsafeReadBack (DynVector v) = do
     DynVectorData s v <- readMutVar v
     MV.unsafeRead v (MV.length v - 1)
 {-# INLINE unsafeReadBack #-}
+
+extend :: PrimMonad m => DynVector (PrimState m) a -> DynVector (PrimState m) a -> m ()
+extend (DynVector a) (DynVector b) = do
+    DynVectorData sa va <- readMutVar a
+    DynVectorData sb vb <- readMutVar b
+    if (sa + sb > MV.length va) then do
+        va' <- MV.unsafeGrow va (sa + sb)
+        MV.unsafeCopy (MV.unsafeSlice sa sb va') (MV.unsafeSlice 0 sb vb)
+        writeMutVar a (DynVectorData (sa + sb) va') 
+    else do
+        MV.unsafeCopy (MV.unsafeSlice sa sb va) (MV.unsafeSlice 0 sb vb)
+        writeMutVar a (DynVectorData (sa + sb) va) 
+{-# INLINE extend #-}
