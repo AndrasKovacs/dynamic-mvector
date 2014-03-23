@@ -265,6 +265,21 @@ unsafeReadBack (DynVector v) = do
     MV.unsafeRead v (MV.length v - 1)
 {-# INLINE unsafeReadBack #-}
 
+readFront :: PrimMonad m => DynVector (PrimState m) a -> m a
+readFront (DynVector v) = do
+    DynVectorData s v <- readMutVar v
+    if (s <= 0) then
+        error "Data.Vector.Mutable.Dynamic: reading the front of an empty vector"
+    else
+        MV.unsafeRead v 0
+{-# INLINE readFront #-}
+
+unsafeReadFront :: PrimMonad m => DynVector (PrimState m) a -> m a
+unsafeReadFront (DynVector v) = do
+    DynVectorData s v <- readMutVar v
+    MV.unsafeRead v 0
+{-# INLINE unsafeReadFront #-}
+
 extend :: PrimMonad m => DynVector (PrimState m) a -> DynVector (PrimState m) a -> m ()
 extend (DynVector a) (DynVector b) = do
     DynVectorData sa va <- readMutVar a
