@@ -39,7 +39,7 @@ import qualified Data.Vector as V
 
 
 -- | Mutable vector with dynamic behaviour living in the ST or IO monad.
-newtype MVector s a = MVector (MutVar s (MVectorData s a))
+newtype MVector s a = MVector (MutVar s (MVectorData s a)) deriving (Typeable)
 
 type IOVector = MVector RealWorld
 type STVector = MVector
