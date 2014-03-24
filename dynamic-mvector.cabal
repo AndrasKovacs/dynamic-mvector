@@ -1,7 +1,7 @@
 
 name:                dynamic-mvector
 version:             0.1.0.0
-synopsis:            A wrapper around MVector that enables push/pop/append functionality.      
+synopsis:            A wrapper around MVector that enables pushing, popping and extending.     
 homepage:            https://github.com/AndrasKovacs/dynamic-mvector
 license:             BSD3
 license-file:        LICENSE
