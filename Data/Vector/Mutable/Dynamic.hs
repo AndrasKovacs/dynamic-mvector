@@ -58,14 +58,14 @@ freeze :: PrimMonad m => MVector (PrimState m) a -> m (V.Vector a)
 freeze (MVector v) = do
     MVectorData s v <- readMutVar v
     V.freeze (MV.unsafeSlice 0 s v)
-{-# INLINE freeze #-}
+{-# INLINABLE freeze #-}
 
 -- | Convert a mutable vector to an immutable one without copying. The mutable vector shouldn't be accessed afterwards.
 unsafeFreeze :: PrimMonad m => MVector (PrimState m) a -> m (V.Vector a)
 unsafeFreeze (MVector v) = do
     MVectorData s v <- readMutVar v
     V.unsafeFreeze (MV.unsafeSlice 0 s v)
-{-# INLINE unsafeFreeze #-}
+{-# INLINABLE unsafeFreeze #-}
 
 -- | Create a mutable copy from an immutable vector.
 thaw :: PrimMonad m => V.Vector a -> m (MVector (PrimState m) a)
@@ -73,7 +73,7 @@ thaw v = do
     vdat <- V.thaw v
     v <- newMutVar (MVectorData (V.length v) vdat)
     return (MVector v)
-{-# INLINE thaw #-}
+{-# INLINABLE thaw #-}
 
 -- | Convert an immutable vector to a mutable one wihout copying.
 unsafeThaw :: PrimMonad m => V.Vector a -> m (MVector (PrimState m) a)
@@ -81,19 +81,19 @@ unsafeThaw v = do
     vdat <- V.unsafeThaw v
     v <- newMutVar (MVectorData (V.length v) vdat)
     return (MVector v)
-{-# INLINE unsafeThaw #-}
+{-# INLINABLE unsafeThaw #-}
 
 -- | Length of the vector. 
 length :: PrimMonad m => MVector (PrimState m) a -> m Int
 length (MVector v) = liftM (MV.length . _data) (readMutVar v)
-{-# INLINE length #-}
+{-# INLINABLE length #-}
 
 -- | Check whether the vector is empty.
 null :: PrimMonad m => MVector (PrimState m) a -> m Bool
 null (MVector v) = do
     MVectorData s _ <- readMutVar v
     return (s == 0)
-{-# INLINE null #-}
+{-# INLINABLE null #-}
 
 -- | Create a new vector of given length. The elements are uninitialized and throw error upon accessing.
 -- The "Int" argument must be positive. 
@@ -101,14 +101,14 @@ new :: PrimMonad m => Int -> m (MVector (PrimState m) a)
 new i = do
     v  <- MV.new (i + newReserve)
     liftM MVector $ newMutVar (MVectorData i v)
-{-# INLINE new #-}
+{-# INLINABLE new #-}
 
 -- | "New" with the "Int" argument unchecked.
 unsafeNew :: PrimMonad m => Int -> m (MVector (PrimState m) a)
 unsafeNew i = do
     v  <- MV.unsafeNew (i + newReserve)
     liftM MVector $ newMutVar (MVectorData i v)
-{-# INLINE unsafeNew #-}
+{-# INLINABLE unsafeNew #-}
 
 -- | Returns a vector consisting of a value repeated the given times.
 -- Throws an error if the "Int" argument is negative.  
@@ -117,7 +117,7 @@ replicate i a = do
     v <- MV.new i
     MV.set v a  
     liftM MVector $ newMutVar (MVectorData i v)
-{-# INLINE replicate #-}
+{-# INLINABLE replicate #-}
 
 -- | Replicate without checking the "Int" argument.
 unsafeReplicate :: PrimMonad m => Int -> a -> m (MVector (PrimState m) a)
@@ -125,7 +125,7 @@ unsafeReplicate i a = do
     v <- MV.unsafeNew i
     MV.set v a  
     liftM MVector $ newMutVar (MVectorData i v)
-{-# INLINE unsafeReplicate #-}
+{-# INLINABLE unsafeReplicate #-}
 
 -- | Read a value from a location. Preforms bounds checking.
 read :: PrimMonad m => MVector (PrimState m) a -> Int -> m a
@@ -135,12 +135,12 @@ read (MVector v) i = do
         error "Data.Vector.Mutable.Dynamic: read: index out of bounds"
     else 
         MV.unsafeRead v i
-{-# INLINE read #-}
+{-# INLINABLE read #-}
 
 -- | Read without  bounds checking.
 unsafeRead :: PrimMonad m => MVector (PrimState m) a -> Int -> m a
 unsafeRead (MVector v) i = (`MV.unsafeRead` i) . _data =<< readMutVar v
-{-# INLINE unsafeRead #-}
+{-# INLINABLE unsafeRead #-}
 
 -- | Write a value to a location. Performs bounds checking.
 write :: PrimMonad m => MVector (PrimState m) a -> Int -> a -> m ()
@@ -150,28 +150,28 @@ write (MVector v) i a = do
         error "Data.Vector.Mutable.Dynamic: write: index out of bounds"
     else 
         MV.unsafeWrite v i a
-{-# INLINE write #-}
+{-# INLINABLE write #-}
 
 -- | Write without bounds checking.
 unsafeWrite :: PrimMonad m => MVector (PrimState m) a -> Int -> a -> m ()
 unsafeWrite (MVector v) i a = do
     v <- readMutVar v
     MV.unsafeWrite (_data v) i a
-{-# INLINE unsafeWrite #-}
+{-# INLINABLE unsafeWrite #-}
 
 -- | Clear the vector of its contents, setting its length to 0.
 clear :: PrimMonad m => MVector (PrimState m) a -> m ()
 clear (MVector var) = do
     v <- MV.unsafeNew newReserve
     writeMutVar var (MVectorData 0 v)
-{-# INLINE clear #-}
+{-# INLINABLE clear #-}
 
 -- | Set all the elements to a value. 
 set :: PrimMonad m => MVector (PrimState m) a -> a -> m ()
 set (MVector v) a = do
     MVectorData s v <- readMutVar v
     MV.set (MV.unsafeSlice 0 s v) a
-{-# INLINE set #-}
+{-# INLINABLE set #-}
 
 -- | Move the contents of the right vector to the left one. Inputs must have the same length and must not overlap.
 copy :: PrimMonad m => MVector (PrimState m) a -> MVector (PrimState m) a -> m ()
@@ -179,7 +179,7 @@ copy (MVector v1) (MVector v2) = do
     v1 <- readMutVar v1
     v2 <- readMutVar v2
     MV.copy (_data v1) (_data v2)
-{-# INLINE copy #-}
+{-# INLINABLE copy #-}
 
 -- | Copy the contents of the right vector to the left one without checking length and overlapping. 
 unsafeCopy :: PrimMonad m => MVector (PrimState m) a -> MVector (PrimState m) a -> m ()
@@ -187,7 +187,7 @@ unsafeCopy (MVector v1) (MVector v2) = do
     v1 <- readMutVar v1
     v2 <- readMutVar v2
     MV.unsafeCopy (_data v1) (_data v2)
-{-# INLINE unsafeCopy #-}
+{-# INLINABLE unsafeCopy #-}
 
 -- | Move the contents of the right vector to the left one. The vectors must be the same length but may overlap.
 move :: PrimMonad m => MVector (PrimState m) a -> MVector (PrimState m) a -> m ()
@@ -195,7 +195,7 @@ move (MVector v1) (MVector v2) = do
     v1 <- readMutVar v1
     v2 <- readMutVar v2
     MV.move (_data v1) (_data v2)
-{-# INLINE move#-}
+{-# INLINABLE move#-}
 
 -- | Move the contents of the right vector to the left one. The vectors must have the same length and may overlap.
 -- Input lengths are unchecked.  
@@ -204,7 +204,7 @@ unsafeMove (MVector v1) (MVector v2) = do
     v1 <- readMutVar v1
     v2 <- readMutVar v2
     MV.unsafeMove (_data v1) (_data v2)
-{-# INLINE unsafeMove #-}
+{-# INLINABLE unsafeMove #-}
 
 -- | Create a copy from a mutable vector. 
 clone :: PrimMonad m => MVector (PrimState m) a -> m (MVector (PrimState m) a)
@@ -213,7 +213,7 @@ clone (MVector v) = do
     v' <- MV.clone v
     var <- newMutVar (MVectorData s v')
     return (MVector var)
-{-# INLINE clone #-}
+{-# INLINABLE clone #-}
 
 -- | Ensure that an amount of capacity is reserved in the vector. A no-op if there is already enough capacity.
 -- Throws an error if the argument is negative.
@@ -227,7 +227,7 @@ reserve (MVector v) i = do
     else do
         v'' <- MV.unsafeGrow v' i
         writeMutVar v (MVectorData s v'')
-{-# INLINE reserve #-}
+{-# INLINABLE reserve #-}
 
 -- | Ensure that an amount of capacity is reserved in the vector. A no-op if there is already enough capacity.
 -- The argument is unchecked. 
@@ -239,12 +239,12 @@ unsafeReserve (MVector v) i = do
     else do
         v'' <- MV.unsafeGrow v' i
         writeMutVar v (MVectorData s v'')
-{-# INLINE unsafeReserve #-}
+{-# INLINABLE unsafeReserve #-}
 
 -- | Set reserved capacity to 0. 
 trim :: PrimMonad m => MVector (PrimState m) a -> m ()
 trim v = unsafeReserve v 0
-{-# INLINE trim #-}
+{-# INLINABLE trim #-}
 
 -- | Increment the size of the vector and write a value to the back.
 -- Pushing to a slice will potentially overwrite the original vector's elements.
@@ -258,7 +258,7 @@ pushBack (MVector v) a = do
     else do
         MV.unsafeWrite v' s a
         writeMutVar v (MVectorData (s + 1) v')
-{-# INLINE pushBack #-}
+{-# INLINABLE pushBack #-}
       
 -- | Read the back value and remove it from the vector. Throws an error if the vector is empty. 
 popBack :: PrimMonad m => MVector (PrimState m) a -> m a 
@@ -272,7 +272,7 @@ popBack (MVector v) = do
             v'' <- MV.unsafeGrow v' (s - 1)
             writeMutVar v (MVectorData (s - 1) v'')
         return a 
-{-# INLINE popBack #-}
+{-# INLINABLE popBack #-}
 
 -- | Read the back value and remove it from the vector, without checking.
 unsafePopBack :: PrimMonad m => MVector (PrimState m) a -> m a 
@@ -283,7 +283,7 @@ unsafePopBack (MVector v) = do
         v'' <- MV.unsafeGrow v' (s - 1)
         writeMutVar v (MVectorData (s - 1) v'')
     return a 
-{-# INLINE unsafePopBack #-}
+{-# INLINABLE unsafePopBack #-}
 
 -- | Read the back value.  Throws an error if the vector is empty.
 readBack :: PrimMonad m => MVector (PrimState m) a -> m a
@@ -293,14 +293,14 @@ readBack (MVector v) = do
         error "Data.Vector.Mutable.Dynamic: reading the back of an empty vector"
     else
         MV.unsafeRead v (MV.length v - 1)
-{-# INLINE readBack #-}
+{-# INLINABLE readBack #-}
 
 -- | Read the back value without checking.
 unsafeReadBack :: PrimMonad m => MVector (PrimState m) a -> m a
 unsafeReadBack (MVector v) = do
     MVectorData s v <- readMutVar v
     MV.unsafeRead v (MV.length v - 1)
-{-# INLINE unsafeReadBack #-}
+{-# INLINABLE unsafeReadBack #-}
 
 -- | Read the front value. Throws an error if the vector is empty.
 readFront :: PrimMonad m => MVector (PrimState m) a -> m a
@@ -310,14 +310,14 @@ readFront (MVector v) = do
         error "Data.Vector.Mutable.Dynamic: reading the front of an empty vector"
     else
         MV.unsafeRead v 0
-{-# INLINE readFront #-}
+{-# INLINABLE readFront #-}
 
 -- | Read the front value without checking. 
 unsafeReadFront :: PrimMonad m => MVector (PrimState m) a -> m a
 unsafeReadFront (MVector v) = do
     MVectorData s v <- readMutVar v
     MV.unsafeRead v 0
-{-# INLINE unsafeReadFront #-}
+{-# INLINABLE unsafeReadFront #-}
 
 -- | Extend the vector on the left with the elements of the vector on right.
 -- | Extending a slice will potentially overwrite the original vector's elements.
@@ -332,16 +332,16 @@ extend (MVector a) (MVector b) = do
     else do
         MV.unsafeCopy (MV.unsafeSlice sa sb va) (MV.unsafeSlice 0 sb vb)
         writeMutVar a (MVectorData (sa + sb) va) 
-{-# INLINE extend #-}
+{-# INLINABLE extend #-}
 
 -- | Apply a function to an immutable copy of the vector.
 frozen :: PrimMonad m => MVector (PrimState m) a -> (V.Vector a -> b) -> m b
 frozen v f = liftM f (freeze v)
-{-# INLINE frozen #-}
+{-# INLINABLE frozen #-}
 
 -- | Apply a function to the vector recast as immutable. 
 -- This is usually unsafe if we later modify the vector. 
 unsafeFrozen :: PrimMonad m => MVector (PrimState m) a -> (V.Vector a -> b) -> m b
 unsafeFrozen v f = liftM f (unsafeFreeze v)
-{-# INLINE unsafeFrozen #-}
+{-# INLINABLE unsafeFrozen #-}
 
