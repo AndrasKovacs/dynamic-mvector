@@ -15,7 +15,7 @@ module Data.Vector.Mutable.Dynamic(
       freeze, thaw, frozen, unsafeFreeze, unsafeThaw, unsafeFrozen,
 
       -- * Length information
-      length, null,
+      length, null, capacity,
 
       -- * Copying 
       clone, copy, move, unsafeCopy, unsafeMove,
@@ -83,10 +83,15 @@ unsafeThaw v = do
     return (MVector v)
 {-# INLINABLE unsafeThaw #-}
 
--- | Length of the vector. 
+-- | Number of elements in the vector.
 length :: PrimMonad m => MVector (PrimState m) a -> m Int
-length (MVector v) = liftM (MV.length . _data) (readMutVar v)
+length (MVector v) = liftM _size (readMutVar v)
 {-# INLINABLE length #-}
+
+-- | Number of elements that the vector currently have reserved space for.
+capacity :: PrimMonad m => MVector (PrimState m) a -> m Int
+capacity (MVector v) = liftM (MV.length . _data) (readMutVar v)
+{-# INLINABLE capacity #-}
 
 -- | Check whether the vector is empty.
 null :: PrimMonad m => MVector (PrimState m) a -> m Bool
