@@ -1,6 +1,6 @@
 
 name:                dynamic-mvector
-version:             0.1.0.0
+version:             0.1.0.2
 synopsis:            A wrapper around MVector that enables pushing, popping and extending.     
 homepage:            https://github.com/AndrasKovacs/dynamic-mvector
 license:             BSD3
