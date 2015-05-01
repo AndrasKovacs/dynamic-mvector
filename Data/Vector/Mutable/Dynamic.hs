@@ -96,8 +96,8 @@ capacity (MVector v) = liftM (MV.length . _data) (readMutVar v)
 -- | Check whether the vector is empty.
 null :: PrimMonad m => MVector (PrimState m) a -> m Bool
 null (MVector v) = do
-    MVectorData s _ <- readMutVar v
-    return (s == 0)
+  MVectorData s _ <- readMutVar v
+  return (s == 0)
 {-# INLINABLE null #-}
 
 -- | Create a new vector of given length. The elements are uninitialized and throw error upon accessing.
@@ -200,7 +200,7 @@ move (MVector v1) (MVector v2) = do
     v1 <- readMutVar v1
     v2 <- readMutVar v2
     MV.move (_data v1) (_data v2)
-{-# INLINABLE move#-}
+{-# INLINABLE move #-}
 
 -- | Move the contents of the right vector to the left one. The vectors must have the same length and may overlap.
 -- Input lengths are unchecked.  
@@ -264,7 +264,8 @@ pushBack (MVector v) a = do
         MV.unsafeWrite v' s a
         writeMutVar v (MVectorData (s + 1) v')
 {-# INLINABLE pushBack #-}
-      
+
+
 -- | Read the back value and remove it from the vector. Throws an error if the vector is empty. 
 popBack :: PrimMonad m => MVector (PrimState m) a -> m a 
 popBack (MVector v) = do
