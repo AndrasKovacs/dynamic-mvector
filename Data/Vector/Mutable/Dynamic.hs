@@ -269,25 +269,29 @@ pushBack (MVector v) a = do
 -- | Read the back value and remove it from the vector. Throws an error if the vector is empty. 
 popBack :: PrimMonad m => MVector (PrimState m) a -> m a 
 popBack (MVector v) = do
-    MVectorData s v' <- readMutVar v
+    MVectorData s vec <- readMutVar v
     if (s <= 0) then
         error "Data.Vector.Mutable.Dynamic: popBack: empty vector"
     else do 
-        a <- MV.unsafeRead v' (s - 1)
-        when (s < quot (MV.length v') 2) $ do 
-            v'' <- MV.unsafeGrow v' (s - 1)
-            writeMutVar v (MVectorData (s - 1) v'')
+        a <- MV.unsafeRead vec (s - 1)
+        if (s < quot (MV.length vec) 2) then do
+            vec' <- MV.unsafeGrow vec (s - 1)
+            writeMutVar v (MVectorData (s - 1) vec')
+        else
+            writeMutVar v (MVectorData (s - 1) vec)
         return a 
 {-# INLINABLE popBack #-}
 
 -- | Read the back value and remove it from the vector, without checking.
 unsafePopBack :: PrimMonad m => MVector (PrimState m) a -> m a 
 unsafePopBack (MVector v) = do
-    MVectorData s v' <- readMutVar v
-    a <- MV.unsafeRead v' (s - 1)
-    when (s < quot (MV.length v') 2) $ do 
-        v'' <- MV.unsafeGrow v' (s - 1)
-        writeMutVar v (MVectorData (s - 1) v'')
+    MVectorData s vec <- readMutVar v
+    a <- MV.unsafeRead vec (s - 1)
+    if (s < quot (MV.length vec) 2) then do 
+        vec' <- MV.unsafeGrow vec (s - 1)
+        writeMutVar v (MVectorData (s - 1) vec')
+    else
+        writeMutVar v (MVectorData (s - 1) vec)        
     return a 
 {-# INLINABLE unsafePopBack #-}
 
