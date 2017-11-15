@@ -13,5 +13,6 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:     Data.Vector.Mutable.Dynamic
+                       Data.Vector.Generic.Mutable.Dynamic
   build-depends:       base >=4.7 && <5, primitive >=0.5 && <0.7, vector >=0.10
   default-language:    Haskell2010
