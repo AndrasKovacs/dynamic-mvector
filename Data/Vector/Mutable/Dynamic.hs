@@ -225,12 +225,13 @@ clone (MVector v) = do
 reserve :: PrimMonad m => MVector (PrimState m) a -> Int -> m ()
 reserve (MVector v) i = do
     MVectorData s v' <- readMutVar v
+    let currentCapacity = MV.length v'
     if (i < 0) then
         error "Data.Vector.Mutable.Dynamic: reserve: negative argument"
-    else if (i <= MV.length v') then
+    else if (i <= currentCapacity) then
         return ()
     else do
-        v'' <- MV.unsafeGrow v' (i-s)
+        v'' <- MV.unsafeGrow v' (i-currentCapacity)
         writeMutVar v (MVectorData s v'')
 {-# INLINABLE reserve #-}
 
@@ -239,10 +240,11 @@ reserve (MVector v) i = do
 unsafeReserve :: PrimMonad m => MVector (PrimState m) a -> Int -> m ()
 unsafeReserve (MVector v) i = do
     MVectorData s v' <- readMutVar v
-    if (i <= MV.length v') then
+    let currentCapacity = MV.length v'
+    if (i <= currentCapacity) then
         return ()
     else do
-        v'' <- MV.unsafeGrow v' (i-s)
+        v'' <- MV.unsafeGrow v' (i-currentCapacity)
         writeMutVar v (MVectorData s v'')
 {-# INLINABLE unsafeReserve #-}
 
@@ -327,8 +329,9 @@ extend :: PrimMonad m => MVector (PrimState m) a -> MVector (PrimState m) a -> m
 extend (MVector a) (MVector b) = do
     MVectorData sa va <- readMutVar a
     MVectorData sb vb <- readMutVar b
-    if (sa + sb > MV.length va) then do
-        va' <- MV.unsafeGrow va sb
+    let capacityA = MV.length va
+    if (sa + sb > capacityA) then do
+        va' <- MV.unsafeGrow va (sa + sb - capacityA)
         MV.unsafeCopy (MV.unsafeSlice sa sb va') (MV.unsafeSlice 0 sb vb)
         writeMutVar a (MVectorData (sa + sb) va')
     else do
