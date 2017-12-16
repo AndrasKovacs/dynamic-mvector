@@ -225,12 +225,13 @@ clone (MVector v) = do
 reserve :: PrimMonad m => MVector (PrimState m) a -> Int -> m ()
 reserve (MVector v) i = do
     MVectorData s v' <- readMutVar v
+    let currentCapacity = MV.length v'
     if (i < 0) then
         error "Data.Vector.Mutable.Dynamic: reserve: negative argument"
-    else if (s + i <= MV.length v') then
+    else if (i <= currentCapacity) then
         return ()
     else do
-        v'' <- MV.unsafeGrow v' i
+        v'' <- MV.unsafeGrow v' (i-currentCapacity)
         writeMutVar v (MVectorData s v'')
 {-# INLINABLE reserve #-}
 
@@ -239,10 +240,11 @@ reserve (MVector v) i = do
 unsafeReserve :: PrimMonad m => MVector (PrimState m) a -> Int -> m ()
 unsafeReserve (MVector v) i = do
     MVectorData s v' <- readMutVar v
-    if (s + i <= MV.length v') then
+    let currentCapacity = MV.length v'
+    if (i <= currentCapacity) then
         return ()
     else do
-        v'' <- MV.unsafeGrow v' i
+        v'' <- MV.unsafeGrow v' (i-currentCapacity)
         writeMutVar v (MVectorData s v'')
 {-# INLINABLE unsafeReserve #-}
 
@@ -257,7 +259,7 @@ pushBack :: PrimMonad m => MVector (PrimState m) a -> a -> m ()
 pushBack (MVector v) a = do
     MVectorData s v' <- readMutVar v
     if (s == MV.length v') then do
-        v'' <- MV.unsafeGrow v' (s * 2 + 1)
+        v'' <- MV.unsafeGrow v' (s + 1) -- multiply the size of the vector by 2
         MV.unsafeWrite v'' s a
         writeMutVar v (MVectorData (s + 1) v'')
     else do
@@ -274,11 +276,7 @@ popBack (MVector v) = do
         error "Data.Vector.Mutable.Dynamic: popBack: empty vector"
     else do
         a <- MV.unsafeRead vec (s - 1)
-        if (s < quot (MV.length vec) 2) then do
-            vec' <- MV.unsafeGrow vec (s - 1)
-            writeMutVar v (MVectorData (s - 1) vec')
-        else
-            writeMutVar v (MVectorData (s - 1) vec)
+        writeMutVar v (MVectorData (s - 1) vec)
         return a
 {-# INLINABLE popBack #-}
 
@@ -287,11 +285,7 @@ unsafePopBack :: PrimMonad m => MVector (PrimState m) a -> m a
 unsafePopBack (MVector v) = do
     MVectorData s vec <- readMutVar v
     a <- MV.unsafeRead vec (s - 1)
-    if (s < quot (MV.length vec) 2) then do
-        vec' <- MV.unsafeGrow vec (s - 1)
-        writeMutVar v (MVectorData (s - 1) vec')
-    else
-        writeMutVar v (MVectorData (s - 1) vec)
+    writeMutVar v (MVectorData (s - 1) vec)
     return a
 {-# INLINABLE unsafePopBack #-}
 
@@ -335,8 +329,9 @@ extend :: PrimMonad m => MVector (PrimState m) a -> MVector (PrimState m) a -> m
 extend (MVector a) (MVector b) = do
     MVectorData sa va <- readMutVar a
     MVectorData sb vb <- readMutVar b
-    if (sa + sb > MV.length va) then do
-        va' <- MV.unsafeGrow va (sa + sb)
+    let capacityA = MV.length va
+    if (sa + sb > capacityA) then do
+        va' <- MV.unsafeGrow va (sa + sb - capacityA)
         MV.unsafeCopy (MV.unsafeSlice sa sb va') (MV.unsafeSlice 0 sb vb)
         writeMutVar a (MVectorData (sa + sb) va')
     else do
@@ -354,4 +349,3 @@ frozen v f = liftM f (freeze v)
 unsafeFrozen :: PrimMonad m => MVector (PrimState m) a -> (V.Vector a -> b) -> m b
 unsafeFrozen v f = liftM f (unsafeFreeze v)
 {-# INLINABLE unsafeFrozen #-}
-
