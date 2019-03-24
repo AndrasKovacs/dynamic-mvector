@@ -296,14 +296,14 @@ readBack (MVector v) = do
     if (s <= 0) then
         error "Data.Vector.Mutable.Dynamic: reading the back of an empty vector"
     else
-        MV.unsafeRead v (MV.length v - 1)
+        MV.unsafeRead v (s - 1)
 {-# INLINABLE readBack #-}
 
 -- | Read the back value without checking.
 unsafeReadBack :: PrimMonad m => MVector (PrimState m) a -> m a
 unsafeReadBack (MVector v) = do
     MVectorData s v <- readMutVar v
-    MV.unsafeRead v (MV.length v - 1)
+    MV.unsafeRead v (s - 1)
 {-# INLINABLE unsafeReadBack #-}
 
 -- | Read the front value. Throws an error if the vector is empty.
