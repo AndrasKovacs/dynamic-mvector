@@ -1,0 +1,21 @@
+name: Haskell CI with Stack
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Haskell environment with Stack
+        uses: haskell-actions/setup@v2
+        with:
+          enable-stack: true
+
+      - name: Build dependencies
+        run: stack build --only-dependencies --test
+
+      - name: Run tests
+        run: stack test
